@@ -1,6 +1,6 @@
 # Basilisk
 
-A roguelike game for GameOff 2018 (In progress). 
+A roguelike game for GameOff 2018 ([released!](https://knh190.itch.io/basilisk)). 
 
 Your brain is invaded by a troop of robots. The more abilities you get, the more enemies learn.
 
