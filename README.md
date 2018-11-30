@@ -18,7 +18,7 @@ Your brain is invaded by a troop of robots. The more abilities you get, the more
 
 ## Sprites
 
-Made with [pixelator](http://pixelatorapp.com/) and Sketchbook.
+Made with [pixelator](http://pixelatorapp.com/) and Sketchbook. Enemy sprites from asset store [Pixel Art Enemy Pack](https://assetstore.unity.com/packages/3d/pixel-art-enemy-pack-63314).
 
 ## Music
 
