@@ -59,6 +59,10 @@ namespace Completed
             if (other.tag == "Enemy")
 
                 other.GetComponent<Enemy>().TakeDamage(playerScript.dmg);
+
+            if (other.tag == "Boss")
+
+                other.GetComponent<Basilisk>().TakeDamage(playerScript.dmg);
         }
 
         // Thrown N tiles away

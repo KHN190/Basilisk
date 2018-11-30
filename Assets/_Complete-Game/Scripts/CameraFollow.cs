@@ -8,11 +8,15 @@ namespace Completed
         public float panSpeed = 30f;
         public float panBorderThickness = 20f;
         public Vector2 limitAxisX;
-        public float moveTime = 2.0f;
+        public float moveTime = 1.0f;
+
+        private GameObject player;
 
         void Start()
         {
-            limitAxisX = new Vector2(7, 17);
+            limitAxisX = new Vector2(7, 15);
+
+            player = GameObject.Find("Player");
         }
 
         private void OnEnable()
@@ -29,10 +33,17 @@ namespace Completed
         {
             Vector3 end = new Vector3
             {
-                x = transform.position.x + xDir,
+                x = transform.position.x + xDir * 3,
                 y = transform.position.y,
                 z = transform.position.z
             };
+
+            if (player.transform.position.x <= 4)
+                end.x = limitAxisX.x;
+
+            if (player.transform.position.x >= 12)
+                end.x = limitAxisX.y;
+
             end.x = Mathf.Clamp(end.x, limitAxisX.x, limitAxisX.y);
 
             StartCoroutine(SmoothMovement(end));

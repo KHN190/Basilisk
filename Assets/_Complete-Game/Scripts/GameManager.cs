@@ -24,6 +24,7 @@ namespace Completed
 
         private GameObject player;
         private GameObject dialog;
+        private GameObject buttons;
         private Text levelText;
 		private GameObject levelImage;
 		private List<Enemy> enemies;
@@ -77,6 +78,8 @@ namespace Completed
 
             dialog = GameObject.Find("Dialog");
 
+            buttons = GameObject.Find("Buttons");
+
             levelText.text = "Level " + level;
 			
 			levelImage.SetActive(true);
@@ -84,10 +87,17 @@ namespace Completed
 			Invoke("HideLevelImage", levelStartDelay);
 			
 			enemies.Clear();
-			
-			boardScript.SetupScene(level);
+
+            boardScript.SetupScene(level);
 
             player = GameObject.Find("Player");
+
+            HideButtons();
+
+            if (level == 12)
+            {
+                player.GetComponent<Player>().PopBossLevelDialog();
+            }
 		}
 		
 		void HideLevelImage()
@@ -96,6 +106,22 @@ namespace Completed
 			
 			doingSetup = false;
 		}
+
+        void ShowButtons()
+        {
+            for (int i = 0; i < buttons.transform.childCount; ++i)
+            {
+                buttons.transform.GetChild(i).gameObject.SetActive(true);
+            }
+        }
+
+        void HideButtons()
+        {
+            for (int i = 0; i < buttons.transform.childCount; ++i)
+            {
+                buttons.transform.GetChild(i).gameObject.SetActive(false);
+            }
+        }
 		
 		void Update()
 		{
@@ -127,14 +153,35 @@ namespace Completed
 			enemies.Add(script);
 		}
 
-		public void GameOver()
+        public void RestartGame()
+        {
+            level = 0;
+
+            InitGame();
+
+            playerHP = 100;
+            playerTP = 0;
+            playerLevel = 0;
+            player.transform.position = Vector3.zero;
+
+            enabled = true;
+        }
+
+        public void GameOver()
 		{
 			levelText.text = "After " + level + " levels, you disconected.";
 			
 			levelImage.SetActive(true);
-			
+
+            ShowButtons();
+
 			enabled = false;
 		}
+
+        public void ExitGame()
+        {
+            Application.Quit();
+        }
 
         public void PauseGame()
         {
@@ -146,7 +193,29 @@ namespace Completed
             pause = false;
         }
 
-        public void popDialog(string text)
+        public void Ending01()
+        {
+            levelText.text = "You realised your identity. There is a new future human ruled by machines.";
+
+            levelImage.SetActive(true);
+
+            enabled = false;
+
+            Invoke("ExitGame", 5f);
+        }
+
+        public void Ending02()
+        {
+            levelText.text = "You defeated Basilisk, and later was destroyed by human.";
+
+            levelImage.SetActive(true);
+
+            enabled = false;
+
+            Invoke("ExitGame", 5f);
+        }
+
+        public void PopDialog(string text)
         {
             PauseGame();
 
@@ -185,6 +254,18 @@ namespace Completed
                     return false;
             }
             return true;
+        }
+
+        private void OnEnable()
+        {
+            Player.PlayerChooseNEvent += Ending01;
+            Basilisk.BossDieEvent += Ending02;
+        }
+
+        private void OnDisable()
+        {
+            Player.PlayerChooseNEvent -= Ending01;
+            Basilisk.BossDieEvent -= Ending02;
         }
     }
 }

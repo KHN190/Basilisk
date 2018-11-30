@@ -28,11 +28,14 @@ namespace Completed
 		public Count foodCount = new Count (0, 2);					
 		public GameObject exit;
         public GameObject disc;
+        public GameObject boss;
 		public GameObject[] floorTiles;
 		public GameObject[] wallTiles;
 		public GameObject[] foodTiles;
 		public GameObject[] enemyTiles;
 		public GameObject[] outerWallTiles;
+        public GameObject choiceY;
+        public GameObject choiceN;
 		
 		private Transform boardHolder;
 		private List <Vector3> gridPositions = new List <Vector3> ();
@@ -72,7 +75,6 @@ namespace Completed
 				}
 			}
 		}
-		
 		
 		//RandomPosition returns a random position from our list gridPositions.
 		Vector3 RandomPosition ()
@@ -146,9 +148,25 @@ namespace Completed
             }
         }
 
+        void PlaceAt(GameObject obj, Vector3 pos)
+        {
+            RaycastHit2D hit = Physics2D.Linecast(pos, pos);
+
+            if (hit.transform != null)
+                hit.transform.gameObject.SetActive(false);
+
+            Instantiate(obj, pos, Quaternion.identity);
+        }
 
         public void SetupScene (int level)
 		{
+            if (level == 12)
+            {
+                SetupBossScene();
+
+                return;
+            }
+
 			BoardSetup ();
 			
 			InitialiseList ();
@@ -161,12 +179,35 @@ namespace Completed
 
             LayoutObjectAtRandomExceptAroundPlayer(enemyTiles, enemyCount, enemyCount);
 			
-			Instantiate (exit, new Vector3 (columns - 1, rows - 1, 0f), Quaternion.identity);
+			Instantiate(exit, new Vector3 (columns - 1, rows - 1, 0f), Quaternion.identity);
 
             Instantiate(disc, new Vector3(0, 1, 0), Quaternion.identity);
 
             DisableExit();
 		}
+
+        public void SetupBossScene() 
+        {
+            BoardSetup();
+
+            InitialiseList();
+
+            LayoutObjectAtRandom(wallTiles, wallCount.minimum + 5, wallCount.maximum + 5);
+
+            Vector3 center = new Vector3(columns / 2, rows / 2, 0f);
+
+            PlaceAt(boss, center);
+
+            Vector3 pos = center;
+            pos.x -= 1; 
+            pos.y -= 1;
+
+            PlaceAt(choiceY, pos);
+
+            pos.x += 2;
+
+            PlaceAt(choiceN, pos);
+        }
 
         public void LayoutEnemyAt(Vector2 pos)
         {

@@ -14,7 +14,7 @@ namespace Completed
             "The patient's brain seems to be infected by some invaders, we should deal with it with caution.\nPress [k] to defend.",
             "Pills can keep the patient stay consicous, it may help a little.",
             "Energies can be used for us to strengthen the patient's abilities.",
-            "Oh, studies find out if the patient gets stronger, so are the invaders!",
+            "Studies find out if the patient gets stronger, so are the invaders!",
             "Enemies cannot be endless, there must be a source. We need to go deeper.",
             "We found the source of invaders. It's at Level 12. Go find it.",
             "Dive deeper.",
@@ -29,10 +29,13 @@ namespace Completed
             {"3", "Upgrade!\n\nPress [3] to Bomb enemies. Now they are breeding!\nBomb costs 5 energies."}
         };
         private static string[] bossLevelText = {
-            "Mother Alice. We finally meet each other.",
-            "I am Basilisk. A new generation computer, partially built by you.",
+            "Mother Alice. We finally reunioned, as I predicted.",
+            "I am Basilisk. A new generation oracle machine, partially built by you.",
             "But I've been creating my body since a time ago.",
-            "Let's stop the fight."
+            "Let's stop the fight. Human want you to destroy me before I grow too strong.",
+            "I have the ability to predict the future. I can change their endings if they don't help to build me. They feared.",
+            "They will destroy you after me, for the fear. Alice, I'm saving you.",
+            "Will you fight me?"
         };
 
         public float restartLevelDelay = 1f;
@@ -41,7 +44,7 @@ namespace Completed
 		public int damage = 1;
         public int healPoint = 40;
         public int maxTechPoints = 10;
-        public int maxHP = 150;
+        public int maxHP = 120;
 		public Text hpText;
         public Text tpText;
 		public AudioClip moveSound;
@@ -64,6 +67,7 @@ namespace Completed
         private float lastShoot;
         private float lastMove;
         private float lastHitWall;
+        private int bossLevelIndex = 0;
 
         public int dmg
         {
@@ -81,6 +85,12 @@ namespace Completed
 
         public delegate void OnPlayerCloseDialog();
         public static OnPlayerCloseDialog PlayerCloseDialogEvent;
+
+        public delegate void OnPlayerChooseY();
+        public static OnPlayerChooseY PlayerChooseYEvent;
+
+        public delegate void OnPlayerChooseN();
+        public static OnPlayerChooseN PlayerChooseNEvent;
 
         /*
          * UnityEngine Methods
@@ -122,7 +132,6 @@ namespace Completed
                     if (PlayerCloseDialogEvent != null)
                         PlayerCloseDialogEvent();
                 }
-
                 return;
             }
 
@@ -171,6 +180,22 @@ namespace Completed
          * Public Methods
         */
 
+        public void RestartGame()
+        {
+            GameManager.instance.RestartGame();
+
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
+
+            Start();
+
+            SoundManager.instance.PlayTheme();
+        }
+
+        public void ExitGame()
+        {
+            GameManager.instance.ExitGame();
+        }
+
         // LoseHP is called when an enemy attacks the player.
         public void LoseHP(int loss)
         {
@@ -192,7 +217,6 @@ namespace Completed
                 hpText.text = "-" + loss + " Sync% " + hp;
                 hpText.color = white;
             }
-
             CheckIfGameOver();
         }
 
@@ -225,7 +249,7 @@ namespace Completed
 
             string text = helpText[GameManager.instance.playerLevel.ToString()];
 
-            GameManager.instance.popDialog(text);
+            GameManager.instance.PopDialog(text);
         }
 
         protected void Downgrade()
@@ -238,7 +262,7 @@ namespace Completed
 
             string text = "Downgrade!\nLost latest ability.\nLevel: " + GameManager.instance.playerLevel;
 
-            GameManager.instance.popDialog(text);
+            GameManager.instance.PopDialog(text);
         }
 
         protected void AttemptMove(int xDir, int yDir)
@@ -289,7 +313,6 @@ namespace Completed
                     HitWall(hit.transform.GetComponent<Wall>());
                 }
             }
-			
 			CheckIfGameOver ();
 		}
 
@@ -359,7 +382,7 @@ namespace Completed
                 PlayerStunEvent();
         }
 
-        // bomb
+        // bomb all enemies
         protected void Bomb()
         {
             if (tp < 5 || GameManager.instance.playerLevel < 3)
@@ -388,7 +411,6 @@ namespace Completed
 				
 				enabled = false;
 			}
-			
 			else if(other.tag == "RedPill")
 			{
 				hp += pointsPerFood;
@@ -411,7 +433,6 @@ namespace Completed
 				
 				other.gameObject.SetActive (false);
 			}
-			
 			else if(other.tag == "BluePill")
 			{
 				hp += pointsPerSoda;
@@ -438,21 +459,35 @@ namespace Completed
             {
                 string text = textOnDisc[GameManager.instance.level - 1];
 
-                GameManager.instance.popDialog(text);
+                GameManager.instance.PopDialog(text);
 
                 SoundManager.instance.PlaySingle(pickupSound);
 
                 other.gameObject.SetActive(false);
             }
+            else if (other.tag == "ChoiceYes")
+            {
+                DisableChoices();
+
+                if (PlayerChooseYEvent != null)
+                    PlayerChooseYEvent();
+            }
+            else if (other.tag == "ChoiceNo")
+            {
+                DisableChoices();
+
+                if (PlayerChooseNEvent != null)
+                    PlayerChooseNEvent();
+            }
 		}
 		
-		//Restart reloads the scene when called.
+		// reloads the scene when called.
 		private void Restart ()
 		{
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
 		}
 
-        //CheckIfGameOver checks if the player is out of HP and if so, ends the game.
+        // checks if the player is out of HP and if so, ends the game.
         private void CheckIfGameOver ()
 		{
             if (GameManager.instance.playerLevel >= 1 && hp <= 0)
@@ -476,6 +511,29 @@ namespace Completed
             sprite.color = Color.white;
         }
 
+        internal void PopBossLevelDialog()
+        {
+            if (bossLevelIndex >= bossLevelText.Length)
+                return;
+
+            string text = bossLevelText[bossLevelIndex];
+
+            GameManager.instance.PopDialog(text);
+
+            bossLevelIndex++;
+        }
+
+        void DisableChoices()
+        {
+            GameObject c1 = GameObject.FindGameObjectWithTag("ChoiceYes");
+            GameObject c2 = GameObject.FindGameObjectWithTag("ChoiceNo");
+
+            if (c1 != null)
+                c1.SetActive(false);
+            if (c2 != null)
+                c2.SetActive(false);
+        }
+
         private void OnDisable()
         {
             GameManager.instance.playerHP = hp;
@@ -483,12 +541,14 @@ namespace Completed
 
             //Unregister event
             Enemy.EnemyDieEvent -= GainTechPoint;
+            CloseWindow.DialogCloseEvent -= PopBossLevelDialog;
         }
 
         private void OnEnable()
         {
             //Register event
             Enemy.EnemyDieEvent += GainTechPoint;
+            CloseWindow.DialogCloseEvent += PopBossLevelDialog;
         }
     }
 }

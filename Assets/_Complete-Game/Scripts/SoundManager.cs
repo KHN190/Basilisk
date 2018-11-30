@@ -43,5 +43,12 @@ namespace Completed
 			
 			efxSource.PlayOneShot(efxSource.clip);
 		}
+
+        public void PlayTheme()
+        {
+            if (!musicSource.isPlaying)
+                musicSource.Play();
+            musicSource.loop = true;
+        }
 	}
 }

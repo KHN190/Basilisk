@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-
 namespace Completed
 {
     public class CloseWindow : MonoBehaviour
     {
+        public delegate void OnDialogClose();
+        public static OnDialogClose DialogCloseEvent;
 
         private GameObject dialogBox;
 
@@ -22,8 +23,10 @@ namespace Completed
             {
                 dialogBox.transform.GetChild(i).gameObject.SetActive(false);
             }
-
             GameManager.instance.ResumeGame();
+
+            if (GameManager.instance.level == 12 && DialogCloseEvent != null)
+                DialogCloseEvent();
         }
 
         private void CloseDialogAfterShortTime()
